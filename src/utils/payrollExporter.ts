@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, WidthType, AlignmentType } from 'docx';
 import { downloadBlobFile, downloadExcelWorkbook } from './downloadHelper';
 import { roundSalary } from './attendanceProcessor';
+import { getCachedCompanySettings } from '../lib/companySettings';
 
 export interface PayrollExportRow {
   pin: string;
@@ -29,12 +30,15 @@ export interface PayrollExportRow {
 export function exportPayrollToPdf(rows: PayrollExportRow[], monthYear: string, options?: { isBonusOnly?: boolean }) {
   const isBonusOnly = options?.isBonusOnly || false;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const settings = getCachedCompanySettings();
+  const companyName = settings.company_name || 'ELIPSE HR';
+  const currency = settings.currency_symbol || 'PKR';
 
   if (isBonusOnly) {
     // Bonus & Expense Statement Header
     doc.setFontSize(18);
     doc.setTextColor(30, 41, 59);
-    doc.text(`ELIPSE HR - Bonus & Expense Statement (${monthYear})`, 14, 16);
+    doc.text(`${companyName} - Bonus & Expense Statement (${monthYear})`, 14, 16);
 
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
@@ -48,7 +52,7 @@ export function exportPayrollToPdf(rows: PayrollExportRow[], monthYear: string, 
     doc.setFontSize(9);
     doc.setTextColor(15, 23, 42);
     doc.text(
-      `Total Employees: ${rows.length}   |   Total Base Salary: PKR ${totalBase.toLocaleString('en-PK')}   |   Total Bonus / Expenses: PKR ${totalBonus.toLocaleString('en-PK')}`,
+      `Total Employees: ${rows.length}   |   Total Base Salary: ${currency} ${totalBase.toLocaleString('en-PK')}   |   Total Bonus / Expenses: ${currency} ${totalBonus.toLocaleString('en-PK')}`,
       18,
       34
     );
@@ -90,7 +94,7 @@ export function exportPayrollToPdf(rows: PayrollExportRow[], monthYear: string, 
   // Full Payroll Statement Header
   doc.setFontSize(18);
   doc.setTextColor(30, 41, 59);
-  doc.text(`ELIPSE HR - Payroll Statement (${monthYear})`, 14, 16);
+  doc.text(`${companyName} - Payroll Statement (${monthYear})`, 14, 16);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
@@ -110,7 +114,7 @@ export function exportPayrollToPdf(rows: PayrollExportRow[], monthYear: string, 
   doc.setFontSize(9);
   doc.setTextColor(15, 23, 42);
   doc.text(
-    `Base Salary: PKR ${totalBase.toLocaleString('en-PK')}  |  OT: +PKR ${totalOvertime.toLocaleString('en-PK')}  |  Bonus: +PKR ${totalBonus.toLocaleString('en-PK')}  |  Late: -PKR ${totalLateDed.toLocaleString('en-PK')}  |  Abs: -PKR ${totalAbsDed.toLocaleString('en-PK')}  |  Loan: -PKR ${totalLoanDed.toLocaleString('en-PK')}  |  Net: PKR ${totalPayable.toLocaleString('en-PK')}`,
+    `Base Salary: ${currency} ${totalBase.toLocaleString('en-PK')}  |  OT: +${currency} ${totalOvertime.toLocaleString('en-PK')}  |  Bonus: +${currency} ${totalBonus.toLocaleString('en-PK')}  |  Late: -${currency} ${totalLateDed.toLocaleString('en-PK')}  |  Abs: -${currency} ${totalAbsDed.toLocaleString('en-PK')}  |  Loan: -${currency} ${totalLoanDed.toLocaleString('en-PK')}  |  Net: ${currency} ${totalPayable.toLocaleString('en-PK')}`,
     18,
     35
   );
@@ -162,6 +166,8 @@ export function exportPayrollToPdf(rows: PayrollExportRow[], monthYear: string, 
 
 export function exportPayrollToExcel(rows: PayrollExportRow[], monthYear: string, options?: { isBonusOnly?: boolean }) {
   const isBonusOnly = options?.isBonusOnly || false;
+  const settings = getCachedCompanySettings();
+  const currency = settings.currency_symbol || 'PKR';
 
   const excelData = isBonusOnly
     ? rows.map(r => ({
@@ -169,8 +175,8 @@ export function exportPayrollToExcel(rows: PayrollExportRow[], monthYear: string
         'Employee Name': r.name,
         'Department': r.department || '-',
         'Designation': r.designation || '-',
-        'Base Salary (PKR)': roundSalary(r.baseSalary),
-        'Bonus / Expense Amount (PKR)': roundSalary(r.bonusAmount || 0),
+        [`Base Salary (${currency})`]: roundSalary(r.baseSalary),
+        [`Bonus / Expense Amount (${currency})`]: roundSalary(r.bonusAmount || 0),
         'Status': 'Approved'
       }))
     : rows.map(r => ({
@@ -185,13 +191,13 @@ export function exportPayrollToExcel(rows: PayrollExportRow[], monthYear: string
         'Absence (Days)': r.absences,
         'Overtime (Hours)': r.totalOvertimeHours,
         'Compensated OT (Hours)': r.totalCompensatedOvertimeHours,
-        'Overtime Payout (PKR)': roundSalary(r.overtimePayout),
-        'Bonus / Expense (PKR)': roundSalary(r.bonusAmount || 0),
-        'Late Deduction (PKR)': roundSalary(r.totalLateDeduction),
-        'Absence Deduction (PKR)': roundSalary(r.totalAbsenceDeduction),
-        'Loan Deduction (PKR)': roundSalary(r.loanDeduction || 0),
-        'Base Salary (PKR)': roundSalary(r.baseSalary),
-        'Net Payable (PKR)': roundSalary(r.totalPayable)
+        [`Overtime Payout (${currency})`]: roundSalary(r.overtimePayout),
+        [`Bonus / Expense (${currency})`]: roundSalary(r.bonusAmount || 0),
+        [`Late Deduction (${currency})`]: roundSalary(r.totalLateDeduction),
+        [`Absence Deduction (${currency})`]: roundSalary(r.totalAbsenceDeduction),
+        [`Loan Deduction (${currency})`]: roundSalary(r.loanDeduction || 0),
+        [`Base Salary (${currency})`]: roundSalary(r.baseSalary),
+        [`Net Payable (${currency})`]: roundSalary(r.totalPayable)
       }));
 
   const sheetName = isBonusOnly ? 'Bonus & Expenses' : 'Payroll Summary';
@@ -206,8 +212,10 @@ export function exportPayrollToExcel(rows: PayrollExportRow[], monthYear: string
 
 export async function exportPayrollToWord(rows: PayrollExportRow[], monthYear: string, options?: { isBonusOnly?: boolean }) {
   const isBonusOnly = options?.isBonusOnly || false;
+  const settings = getCachedCompanySettings();
+  const companyName = settings.company_name || 'ELIPSE HR';
 
-  const titleText = isBonusOnly ? `ELIPSE HR - Bonus & Expense Statement (${monthYear})` : `ELIPSE HR - Payroll Statement (${monthYear})`;
+  const titleText = isBonusOnly ? `${companyName} - Bonus & Expense Statement (${monthYear})` : `${companyName} - Payroll Statement (${monthYear})`;
   const fileName = isBonusOnly ? `Bonus_Expense_Statement_${monthYear.replace(/ /g, '_')}.docx` : `Payroll_Statement_${monthYear.replace(/ /g, '_')}.docx`;
 
   const headers = isBonusOnly
@@ -276,10 +284,12 @@ export async function exportPayrollToWord(rows: PayrollExportRow[], monthYear: s
 
 export function exportPayrollToCsv(rows: PayrollExportRow[], monthYear: string, options?: { isBonusOnly?: boolean }) {
   const isBonusOnly = options?.isBonusOnly || false;
+  const settings = getCachedCompanySettings();
+  const currency = settings.currency_symbol || 'PKR';
 
   if (isBonusOnly) {
     const headers = [
-      'Employee PIN', 'Employee Name', 'Department', 'Designation', 'Base Salary (PKR)', 'Bonus / Expense Amount (PKR)', 'Status'
+      'Employee PIN', 'Employee Name', 'Department', 'Designation', `Base Salary (${currency})`, `Bonus / Expense Amount (${currency})`, 'Status'
     ];
 
     const csvRows = [
@@ -298,8 +308,8 @@ export function exportPayrollToCsv(rows: PayrollExportRow[], monthYear: string, 
   const headers = [
     'Employee PIN', 'Employee Name', 'Department', 'Designation', 'Total Working Days', 'Present Days',
     'Late Arrivals (Days)', 'Total Late Minutes', 'Absence (Days)', 'Overtime Hours', 'Compensated OT Hours',
-    'Overtime Payout (PKR)', 'Bonus / Expense (PKR)', 'Late Deduction (PKR)', 'Absence Deduction (PKR)', 'Loan Deduction (PKR)',
-    'Base Salary (PKR)', 'Net Payable (PKR)'
+    `Overtime Payout (${currency})`, `Bonus / Expense (${currency})`, `Late Deduction (${currency})`, `Absence Deduction (${currency})`, `Loan Deduction (${currency})`,
+    `Base Salary (${currency})`, `Net Payable (${currency})`
   ];
 
   const csvRows = [

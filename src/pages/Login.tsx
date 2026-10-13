@@ -11,6 +11,7 @@ import {
   recordLoginDevice
 } from '../utils/biometricAuth';
 import type { TrustedDeviceRecord } from '../utils/biometricAuth';
+import { useCompanySettings } from '../lib/companySettings';
 
 interface LoginProps {
   onLoginSuccess: (user: any, role: 'admin' | 'employee') => void;
@@ -19,6 +20,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLoginSuccess, theme, toggleTheme }: LoginProps) {
+  const { companySettings } = useCompanySettings();
   const [email, setEmail] = useState(() => localStorage.getItem('remembered_login_email') || '');
   const [password, setPassword] = useState('');
   const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem('remembered_login_email'));
@@ -222,10 +224,15 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }: LoginProps
         <div className="cool-spinner-container">
           <div className="cool-spinner-ring-outer"></div>
           <div className="cool-spinner-ring-inner"></div>
-          <img src="/icons/logo.png" alt="logo" className="cool-spinner-logo" />
+          <img 
+            src={companySettings.company_logo_url || "/icons/logo.png"} 
+            alt="logo" 
+            className="cool-spinner-logo" 
+            onError={(e) => { (e.target as any).src = '/icons/logo.png'; }}
+          />
         </div>
         <div className="cool-loading-text">
-          <span>Elipse HR</span>
+          <span>{companySettings.company_name || 'Elipse HR'}</span>
           <span className="cool-loading-subtext">Verifying credentials and starting session...</span>
         </div>
       </div>
@@ -254,14 +261,15 @@ export default function Login({ onLoginSuccess, theme, toggleTheme }: LoginProps
         <div style={styles.header}>
           <div style={styles.logoContainer}>
             <img 
-              src="/icons/logo.png" 
+              src={companySettings.company_logo_url || "/icons/logo.png"} 
               alt="logo" 
               className="logo-icon" 
-              style={{ width: '130px', height: 'auto', objectFit: 'contain' }} 
+              style={{ width: '130px', height: 'auto', maxHeight: '100px', objectFit: 'contain' }} 
+              onError={(e) => { (e.target as any).src = '/icons/logo.png'; }}
             />
           </div>
-          <h1 style={styles.title}>ELIPSE HR</h1>
-          <p style={styles.subtitle}>Secure Attendance & HR Management Portal</p>
+          <h1 style={styles.title}>{companySettings.company_name || 'ELIPSE HR'}</h1>
+          <p style={styles.subtitle}>{companySettings.company_tagline || companySettings.app_title || 'Secure Attendance & HR Management Portal'}</p>
         </div>
 
         {errorMsg && (

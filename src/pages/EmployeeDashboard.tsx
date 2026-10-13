@@ -47,6 +47,7 @@ import HelpdeskTab from './employee/tabs/HelpdeskTab';
 import EmployeeDeviceTab from './employee/tabs/EmployeeDeviceTab';
 import EmployeeModals from './employee/modals/EmployeeModals';
 import EmployeeHelpdeskModal from './employee/modals/EmployeeHelpdeskModal';
+import { useCompanySettings } from '../lib/companySettings';
 
 interface EmployeeDashboardProps {
   user: any;
@@ -83,6 +84,7 @@ export default function EmployeeDashboard({
   onSwitchPortal,
   hasAdminPortalAccess = false
 }: EmployeeDashboardProps) {
+  const { companySettings } = useCompanySettings();
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [allProfiles, setAllProfiles] = useState<EmployeeProfile[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<any | null>(null);
@@ -1453,10 +1455,15 @@ export default function EmployeeDashboard({
         <div className="cool-spinner-container">
           <div className="cool-spinner-ring-outer"></div>
           <div className="cool-spinner-ring-inner"></div>
-          <img src="/icons/logo.png" alt="logo" className="cool-spinner-logo" />
+          <img 
+            src={companySettings.company_logo_url || "/icons/logo.png"} 
+            alt="logo" 
+            className="cool-spinner-logo" 
+            onError={(e) => { (e.target as any).src = '/icons/logo.png'; }}
+          />
         </div>
         <div className="cool-loading-text">
-          <span>Elipse HR</span>
+          <span>{companySettings.company_name || 'Elipse HR'}</span>
           <span className="cool-loading-subtext">Initializing secure session...</span>
         </div>
       </div>
@@ -1684,12 +1691,13 @@ export default function EmployeeDashboard({
         <div className="responsive-nav-top-row">
           <div style={styles.navBrand}>
             <img 
-              src="/icons/logo.png" 
+              src={companySettings.company_logo_url || "/icons/logo.png"} 
               alt="logo" 
               className="logo-icon" 
-              style={{ width: '60px', height: 'auto', objectFit: 'contain', marginRight: '6px' }} 
+              style={{ width: '60px', height: 'auto', maxHeight: '42px', objectFit: 'contain', marginRight: '6px' }} 
+              onError={(e) => { (e.target as any).src = '/icons/logo.png'; }}
             />
-            <span style={styles.navTitle} className="hide-on-mobile">ELIPSE HR</span>
+            <span style={styles.navTitle} className="hide-on-mobile">{companySettings.company_name || 'ELIPSE HR'}</span>
             <span style={styles.badge} className="hide-on-mobile">Employee Portal</span>
           </div>
 

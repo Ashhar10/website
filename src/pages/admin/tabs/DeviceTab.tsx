@@ -26,8 +26,9 @@ import {
   clearAuditLog,
   syncAllPendingMutations
 } from '../../../lib/syncCacheManager';
+import CompanyProfileTab from './CompanyProfileTab';
 
-type DeviceSubTab = 'notifications' | 'zkteco' | 'backup' | 'auth' | 'usb' | 'audit';
+type DeviceSubTab = 'company' | 'notifications' | 'zkteco' | 'backup' | 'auth' | 'usb' | 'audit';
 
 interface DeviceTabProps {
   deviceSettings: DeviceSettings;
@@ -80,7 +81,7 @@ export const DeviceTab: React.FC<DeviceTabProps> = ({
   profiles = []
 }) => {
   const isMuted = !!deviceSettings.is_notifications_muted;
-  const [deviceSubTab, setDeviceSubTab] = useState<DeviceSubTab>('notifications');
+  const [deviceSubTab, setDeviceSubTab] = useState<DeviceSubTab>('company');
   const backupTargetDate = new Date().toISOString().split('T')[0];
   const [isExportingBackup, setIsExportingBackup] = useState<boolean>(false);
 
@@ -518,6 +519,19 @@ export const DeviceTab: React.FC<DeviceTabProps> = ({
           Device & Settings Panel:
         </span>
         
+        {/* 0. Company Profile & Branding */}
+        <button
+          type="button"
+          onClick={() => setDeviceSubTab('company')}
+          style={getSubTabBtnStyle(deviceSubTab === 'company')}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+          <span>Company Profile & Branding</span>
+        </button>
+
         {/* 1. System Notification */}
         <button
           type="button"
@@ -630,6 +644,13 @@ export const DeviceTab: React.FC<DeviceTabProps> = ({
           )}
         </button>
       </div>
+
+      {/* ========================================================================= */}
+      {/* 0. SUB-TAB: COMPANY PROFILE & BRANDING                                    */}
+      {/* ========================================================================= */}
+      {deviceSubTab === 'company' && (
+        <CompanyProfileTab />
+      )}
 
       {/* ========================================================================= */}
       {/* 1. SUB-TAB: SYSTEM NOTIFICATION                                          */}
